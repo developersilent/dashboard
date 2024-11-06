@@ -1,42 +1,70 @@
-"use client"; // Required for Next.js 13+ client-side rendering
+"use client";
 
-import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import "leaflet/dist/leaflet.css";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { startAutoFetch } from "@/lib/help";
 
-// Dynamically import MapContainer and Leaflet components to prevent SSR issues
-const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
-const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false });
-const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), { ssr: false });
+import type L from "leaflet";
 
-const Map = () => {
-    const [isClient, setIsClient] = useState(false);
+interface Location {
+    Id: string;
+    Latitude: number;
+    Longitude: number;
+    Time: string;
+}
+
+// Dynamically import components with SSR disabled
+const MapContainer = dynamic(() => import("react-leaflet").then(mod => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import("react-leaflet").then(mod => mod.TileLayer), { ssr: false });
+const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), { ssr: false });
+const Popup = dynamic(() => import("react-leaflet").then(mod => mod.Popup), { ssr: false });
+
+export default function Map() {
+    const [data, setData] = useState<Location[]>([]);
+    const mapRef = useRef<L.Map | null>(null); // Correctly typed ref
+
+    // Fetch location data
+    const getLoc = async () => {
+        try {
+            const res = await fetch("https://exunbackend.onrender.com/getLocations", {
+                method: "GET",
+                next: {
+                    revalidate: 4, // Revalidate every 5 seconds
+                }
+            });
+            const jsonData = await res.json();
+            setData(jsonData);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    };
 
     useEffect(() => {
-        setIsClient(true); // Set state to true after component mounts
-        return () => {
-            setIsClient(false); // Cleanup on unmount
-        };
-    }, []);
+        // Auto-fetch locations every 5 seconds
+        startAutoFetch(() => {
+            getLoc();
+        });
+    }, []); // Only run once on component mount
 
-    // Prevent server-side rendering
-    if (!isClient) {
-        return null;
-    }
-
-    return (
-        <MapContainer center={[51.505, -0.09]} zoom={13} scrollWheelZoom={false}>
+    // Memoize the MapContainer to prevent re-initialization
+    return useMemo(() => (
+        <MapContainer
+            center={[51.505, -0.09]}
+            zoom={10}
+            ref={mapRef} // Corrected ref usage here
+            style={{ height: "100%", width: "100%" }}
+        >
             <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <Marker position={[51.505, -0.09]}>
-                <Popup>
-                    A pretty CSS3 popup. <br /> Easily customizable.
-                </Popup>
-            </Marker>
+            {data.map((location) => (
+                <Marker key={location.Id} position={[location.Latitude, location.Longitude]}>
+                    <Popup>
+                        <span>{location.Time}</span>
+                    </Popup>
+                </Marker>
+            ))}
         </MapContainer>
-    );
-};
-
-export default Map;
+    ), [data]); // Only rerender when data changes
+}
