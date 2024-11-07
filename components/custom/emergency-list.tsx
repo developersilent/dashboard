@@ -7,7 +7,7 @@ export default function EmergencyList() {
     const db = database.sosHelp
     return (
         <ScrollArea
-            className="h-[250px] md:h-[450px] max-sm:h-[250px] w-full pb-12 pt-1 bg-[hsl(var(--card))] border-[hsl(var(--border))] rounded-lg"
+            className="h-[250px] md:h-[450px] max-sm:h-[250px] w-full pb-14 pt-1 bg-[hsl(var(--card))] border-[hsl(var(--border))] rounded-lg"
         >
             <div className="space-y-2">
                 {db.map((alert) => (
@@ -24,7 +24,7 @@ export default function EmergencyList() {
                         </Avatar>
 
                         {/* User Information */}
-                        <div className="ml-4 space-y-1 flex flex-col items-center gap-[0.7px]">
+                        <div className="ml-4 space-y-1 flex flex-col gap-[0.7px]">
                             <p className="text-xs font-medium leading-none text-[hsl(var(--foreground))]">
                                 {alert.user}
                             </p>

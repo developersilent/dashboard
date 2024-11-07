@@ -1,9 +1,9 @@
-import TestDashB from "@/components/custom/testDashB";
+import Dashboard from "@/components/custom/dashboard";
 
 export default function page(){
     return(
         <>
-            <TestDashB/>
+            <Dashboard/>
         </>
     )
 }

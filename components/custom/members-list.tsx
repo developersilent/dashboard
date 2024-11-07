@@ -8,7 +8,7 @@ export default function MembersList() {
     return (
         <>
             <ScrollArea
-                className="h-[250px] md:h-[300px] w-full pb-9 pt-1 bg-[hsl(var(--card))] border-[hsl(var(--border))] rounded-lg">
+                className="h-[250px] flex-grow md:h-[300px] w-full pb-9 pt-1 bg-[hsl(var(--card))] border-[hsl(var(--border))] rounded-lg">
                 <div className="space-y-2">
                     {db.map((member) => (
                         <div key={member.id}
